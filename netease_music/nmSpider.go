@@ -16,6 +16,9 @@ import (
 	// "encoding/xml"
 	// "encoding/json"
 
+	//json解析
+	"github.com/bitly/go-simplejson"
+
 	// 字符串处理包
 	"regexp"
 	"strconv"
@@ -51,6 +54,9 @@ var NMSpider = &Spider{
 
 			//抓取专辑
 			ctx.Aid(map[string]interface{}{"Rule": "判断专辑页数"}, "判断专辑页数")
+
+			//抓取专辑中的歌曲
+			//ctx.Aid(map[string]interface{}{"Rule": "抓取专辑中的歌曲"}, "抓取专辑中的歌曲")
 		},
 
 		Trunk: map[string]*Rule{
@@ -164,6 +170,76 @@ var NMSpider = &Spider{
 							2: albumUrl,
 						})
 					})
+
+					ctx.Aid(map[string]interface{}{"Albums": albums}, "抓取专辑中的歌曲")
+				},
+			},
+
+			"抓取专辑中的歌曲": {
+				ItemFields: []string{
+					"歌名",
+					"歌曲id",
+					"歌曲alias",
+				},
+				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
+					albums := aid["Albums"].(map[int]string)
+
+					for k, _ := range albums {
+						url := fmt.Sprintf("http://music.163.com/album?id=%d", k)
+						ctx.AddQueue(
+							&request.Request{
+								Url:  url,
+								Rule: "抓取专辑中的歌曲",
+							},
+						)
+					}
+
+					return nil
+				},
+				ParseFunc: func(ctx *Context) {
+					query := ctx.GetDom()
+
+					queryString := string(ctx.GetText())
+					err := ioutil.WriteFile("test.txt", []byte(queryString), 0644)
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					div := query.Find("#song-list-pre-cache").Find("textarea")
+					song_list := div.Text()
+					json1, err := simplejson.NewJson([]byte(song_list))
+					if err != nil {
+						log.Fatal(err)
+					}
+					json2, err := json1.Array()
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					for i := 0; i < len(json2); i++ {
+						songName, err := json1.GetIndex(i).Get("name").String()
+						if err != nil {
+							log.Fatal(err)
+						}
+						songId, err := json1.GetIndex(i).Get("id").Int()
+						if err != nil {
+							log.Fatal(err)
+						}
+						songAliases, err := json1.GetIndex(i).Get("alias").StringArray()
+						songAlias := ""
+						for n, v := range songAliases {
+							songAlias += v
+							if n != len(songAliases)-1 {
+								songAlias += "|"
+							}
+						}
+
+						ctx.Output(map[int]interface{}{
+							0: songName,
+							1: songId,
+							2: songAlias,
+						})
+					}
 				},
 			},
 		},
