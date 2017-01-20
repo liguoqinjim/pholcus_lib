@@ -19,7 +19,6 @@ import (
 	// 字符串处理包
 	"regexp"
 	"strconv"
-	"strings"
 	// 其他包
 	// "fmt"
 	// "math"
@@ -94,10 +93,6 @@ var NMSpider = &Spider{
 							1: artistUrl,
 						})
 					})
-
-					//ctx.Output(map[int]interface{}{
-					//	0: queryString,
-					//})
 				},
 			},
 
@@ -124,6 +119,7 @@ var NMSpider = &Spider{
 			"抓取专辑": {
 				ItemFields: []string{
 					"专辑",
+					"专辑id",
 					"专辑链接",
 				},
 				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
@@ -150,84 +146,23 @@ var NMSpider = &Spider{
 						log.Fatal(err)
 					}
 
+					albums := make(map[int]string) //key是albumid,value是专辑名称
 					query.Find(".tit.f-thide.s-fc0").Each(func(i int, s *goquery.Selection) {
 						albumName := s.Text()
 						albumUrl, _ := s.Attr("href")
 
+						re, _ := regexp.Compile("[1-9]\\d*")
+						albumId := 0
+						if re.MatchString(albumUrl) {
+							albumId, _ = strconv.Atoi(re.FindString(albumUrl))
+						}
+						albums[albumId] = albumName
+
 						ctx.Output(map[int]interface{}{
 							0: albumName,
-							1: albumUrl,
+							1: albumId,
+							2: albumUrl,
 						})
-					})
-				},
-			},
-
-			"生成请求": {
-				//单数页是url直接返回,双数页是异步加载,两个url在下面有写
-				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
-					//Url:  "http://search.jd.com/Search?keyword=" + ctx.GetKeyin() + "&enc=utf-8&qrst=1&rt=1&stop=1&vt=2&bs=1&s=1&click=0&page=" + strconv.Itoa(pageNum),
-					//Url:  "http://search.jd.com/s_new.php?keyword=" + ctx.GetKeyin() + "&enc=utf-8&qrst=1&rt=1&stop=1&vt=2&bs=1&s=31&scrolling=y&pos=30&page=" + strconv.Itoa(pageNum),
-					pageCount := aid["PageCount"].(int)
-
-					for i := 1; i < pageCount; i++ {
-						ctx.AddQueue(
-							&request.Request{
-								Url:  "http://search.jd.com/Search?keyword=" + ctx.GetKeyin() + "&enc=utf-8&qrst=1&rt=1&stop=1&vt=2&bs=1&s=1&click=0&page=" + strconv.Itoa(i*2-1),
-								Rule: "搜索结果",
-							},
-						)
-						ctx.AddQueue(
-							&request.Request{
-								Url:  "http://search.jd.com/s_new.php?keyword=" + ctx.GetKeyin() + "&enc=utf-8&qrst=1&rt=1&stop=1&vt=2&bs=1&s=31&scrolling=y&pos=30&page=" + strconv.Itoa(i*2),
-								Rule: "搜索结果",
-							},
-						)
-					}
-					return nil
-				},
-			},
-
-			"搜索结果": {
-				//从返回中解析出数据。注：异步返回的结果页面结构是和单数页的一样的，所以就一套解析就可以了。
-				ItemFields: []string{
-					"标题",
-					"价格",
-					"评论数",
-					"链接",
-				},
-				ParseFunc: func(ctx *Context) {
-					query := ctx.GetDom()
-
-					query.Find(".gl-item").Each(func(i int, s *goquery.Selection) {
-						// 获取标题
-						a := s.Find(".p-name.p-name-type-2 > a")
-						title := a.Text()
-
-						re, _ := regexp.Compile("\\<[\\S\\s]+?\\>")
-						// title = re.ReplaceAllStringFunc(title, strings.ToLower)
-						title = re.ReplaceAllString(title, " ")
-						title = strings.Trim(title, " \t\n")
-
-						// 获取价格
-						price, _ := s.Find("strong[data-price]").First().Attr("data-price")
-
-						// 获取评论数
-						//#J_goodsList > ul > li:nth-child(1) > div > div.p-commit
-						discuss := s.Find(".p-commit > strong > a").Text()
-
-						// 获取URL
-						url, _ := a.Attr("href")
-						url = "http:" + url
-
-						// 结果存入Response中转
-						if title != "" {
-							ctx.Output(map[int]interface{}{
-								0: title,
-								1: price,
-								2: discuss,
-								3: url,
-							})
-						}
 					})
 				},
 			},
