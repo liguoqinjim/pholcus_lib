@@ -48,7 +48,10 @@ var NMSpider = &Spider{
 	RuleTree: &RuleTree{
 		Root: func(ctx *Context) {
 			//Aid调用Rule中的AidFunc
-			ctx.Aid(map[string]interface{}{"Rule": "抓取歌手"}, "抓取歌手")
+			//ctx.Aid(map[string]interface{}{"Rule": "抓取歌手"}, "抓取歌手")
+
+			//抓取专辑
+			ctx.Aid(map[string]interface{}{"Rule": "判断专辑页数"}, "判断专辑页数")
 		},
 
 		Trunk: map[string]*Rule{
@@ -95,6 +98,67 @@ var NMSpider = &Spider{
 					//ctx.Output(map[int]interface{}{
 					//	0: queryString,
 					//})
+				},
+			},
+
+			"判断专辑页数": {
+				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
+					//url
+					url := "http://music.163.com/artist/album?id=13193&limit=12&offset=0"
+					ctx.AddQueue(
+						&request.Request{
+							Url:  url,
+							Rule: aid["Rule"].(string),
+						},
+					)
+					return nil
+				},
+				ParseFunc: func(ctx *Context) {
+					query := ctx.GetDom()
+
+					pageCount := query.Find(".zpgi").Size()
+					ctx.Aid(map[string]interface{}{"PageCount": pageCount, "Rule": "抓取专辑"}, "抓取专辑")
+				},
+			},
+
+			"抓取专辑": {
+				ItemFields: []string{
+					"专辑",
+					"专辑链接",
+				},
+				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
+					//url http://music.163.com/artist/album?id=13193&limit=12&offset=0
+					pageCount := aid["PageCount"].(int)
+
+					for i := 0; i < pageCount; i++ {
+						url := fmt.Sprintf("http://music.163.com/artist/album?id=13193&limit=12&offset=%d", 12*i)
+						ctx.AddQueue(
+							&request.Request{
+								Url:  url,
+								Rule: aid["Rule"].(string),
+							},
+						)
+					}
+					return nil
+				},
+				ParseFunc: func(ctx *Context) {
+					query := ctx.GetDom()
+
+					queryString := string(ctx.GetText())
+					err := ioutil.WriteFile("test.txt", []byte(queryString), 0644)
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					query.Find(".tit.f-thide.s-fc0").Each(func(i int, s *goquery.Selection) {
+						albumName := s.Text()
+						albumUrl, _ := s.Attr("href")
+
+						ctx.Output(map[int]interface{}{
+							0: albumName,
+							1: albumUrl,
+						})
+					})
 				},
 			},
 
