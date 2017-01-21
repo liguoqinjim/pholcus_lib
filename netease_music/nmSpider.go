@@ -53,10 +53,19 @@ var NMSpider = &Spider{
 			//ctx.Aid(map[string]interface{}{"Rule": "抓取歌手"}, "抓取歌手")
 
 			//抓取专辑
-			ctx.Aid(map[string]interface{}{"Rule": "判断专辑页数"}, "判断专辑页数")
+			//ctx.Aid(map[string]interface{}{"Rule": "判断专辑页数"}, "判断专辑页数")
 
 			//抓取专辑中的歌曲
 			//ctx.Aid(map[string]interface{}{"Rule": "抓取专辑中的歌曲"}, "抓取专辑中的歌曲")
+
+			//抓取单独的歌曲 抓取歌曲
+			//ctx.Aid(map[string]interface{}{"Rule": "抓取歌曲"}, "抓取歌曲")
+
+			//抓取歌曲评论
+			ctx.Aid(map[string]interface{}{"Rule": "抓取歌曲评论"}, "抓取歌曲评论")
+
+			//测试
+			//ctx.Aid(map[string]interface{}{"Rule": "测试"}, "测试")
 		},
 
 		Trunk: map[string]*Rule{
@@ -193,7 +202,6 @@ var NMSpider = &Spider{
 							},
 						)
 					}
-
 					return nil
 				},
 				ParseFunc: func(ctx *Context) {
@@ -240,6 +248,112 @@ var NMSpider = &Spider{
 							2: songAlias,
 						})
 					}
+				},
+			},
+
+			"抓取歌曲": {
+				//ItemFields: []string{
+				//	"歌手",
+				//	"歌手主页",
+				//},
+				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
+					ctx.AddQueue(
+						&request.Request{
+							Url:  "http://music.163.com/song?id=27566765",
+							Rule: aid["Rule"].(string),
+						},
+					)
+					return nil
+				},
+				ParseFunc: func(ctx *Context) {
+					//query := ctx.GetDom()
+
+					queryString := string(ctx.GetText())
+					err := ioutil.WriteFile("test.txt", []byte(queryString), 0644)
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					//query.Find(".nm.nm-icn.f-thide.s-fc0").Each(func(i int, s *goquery.Selection) {
+					//	artistName := s.Text()
+					//	artistUrl, _ := s.Attr("href")
+					//
+					//	ctx.Output(map[int]interface{}{
+					//		0: artistName,
+					//		1: artistUrl,
+					//	})
+					//})
+				},
+			},
+
+			"抓取歌曲评论": {
+				//ItemFields: []string{
+				//	"歌手",
+				//	"歌手主页",
+				//},
+				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
+					//查找歌手的url http://music.163.com/discover/artist/cat?id=1001&initial=90
+					//url := fmt.Sprintf("http://music.163.com/discover/artist/cat?id=%d&initial=%d", v, i)
+					ctx.AddQueue(
+						&request.Request{
+							Url:      "http://music.163.com/weapi/v1/resource/comments/R_SO_4_29728114/?csrf_token=",
+							Rule:     aid["Rule"].(string),
+							Method:   "post",
+							PostData: "params=EDegnd4Lwi8uPnPUYBgZAuhYKCi25JtXoOxAHPzjQqQuxjqMCVFZltaFAUUOtyhr2z3%2FAL7HU67DF3kIWMz6iqiafonsqsJ0pzE14o1dsDxOA8%2BaYEZ55ICivfnuJeZ0Oxuu7tcCr8tdXDVRfxPQsF1bbzgA8vnV5WoOgk2ITTIRPmc80fEHRdtY%2FY3kVFBS&encSecKey=62f38822dc22ec228c7d59ed389768479b6e1ccbb32cba72dcd2752d787bc2e86bc3bfba0764176b72455759d2a7a6d798ce69ac22b7103c4f669d1af2f8f7d6794f6d20cdf938869ccc00e8b9e2b699affc86a7b65fad0ae1575d88bcf02119fb743193526b6528447b2b527707d19c541fdb2899e9072cc7dc6d7638b0c1e2",
+							Header:   map[string][]string{"referer": []string{"http://music.163.com/song?id=29728114"}},
+						},
+					)
+					return nil
+				},
+				ParseFunc: func(ctx *Context) {
+					//query := ctx.GetDom()
+
+					queryString := string(ctx.GetText())
+					err := ioutil.WriteFile("test.txt", []byte(queryString), 0644)
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					//query.Find(".nm.nm-icn.f-thide.s-fc0").Each(func(i int, s *goquery.Selection) {
+					//	artistName := s.Text()
+					//	artistUrl, _ := s.Attr("href")
+					//
+					//	ctx.Output(map[int]interface{}{
+					//		0: artistName,
+					//		1: artistUrl,
+					//	})
+					//})
+				},
+			},
+
+			"测试": {
+				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
+					ctx.AddQueue(
+						&request.Request{
+							Url:  "http://music.163.com/album?id=3067018",
+							Rule: aid["Rule"].(string),
+						},
+					)
+					return nil
+				},
+				ParseFunc: func(ctx *Context) {
+					//query := ctx.GetDom()
+
+					queryString := string(ctx.GetText())
+					err := ioutil.WriteFile("test.txt", []byte(queryString), 0644)
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					//query.Find(".nm.nm-icn.f-thide.s-fc0").Each(func(i int, s *goquery.Selection) {
+					//	artistName := s.Text()
+					//	artistUrl, _ := s.Attr("href")
+					//
+					//	ctx.Output(map[int]interface{}{
+					//		0: artistName,
+					//		1: artistUrl,
+					//	})
+					//})
 				},
 			},
 		},
