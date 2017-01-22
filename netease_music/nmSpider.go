@@ -296,10 +296,11 @@ var NMSpider = &Spider{
 					//url := fmt.Sprintf("http://music.163.com/discover/artist/cat?id=%d&initial=%d", v, i)
 					ctx.AddQueue(
 						&request.Request{
-							Url:      "http://music.163.com/weapi/v1/resource/comments/R_SO_4_29728114/?csrf_token=",
-							Rule:     aid["Rule"].(string),
-							Method:   "post",
-							PostData: "params=EDegnd4Lwi8uPnPUYBgZAuhYKCi25JtXoOxAHPzjQqQuxjqMCVFZltaFAUUOtyhr2z3%2FAL7HU67DF3kIWMz6iqiafonsqsJ0pzE14o1dsDxOA8%2BaYEZ55ICivfnuJeZ0Oxuu7tcCr8tdXDVRfxPQsF1bbzgA8vnV5WoOgk2ITTIRPmc80fEHRdtY%2FY3kVFBS&encSecKey=62f38822dc22ec228c7d59ed389768479b6e1ccbb32cba72dcd2752d787bc2e86bc3bfba0764176b72455759d2a7a6d798ce69ac22b7103c4f669d1af2f8f7d6794f6d20cdf938869ccc00e8b9e2b699affc86a7b65fad0ae1575d88bcf02119fb743193526b6528447b2b527707d19c541fdb2899e9072cc7dc6d7638b0c1e2",
+							Url:    "http://music.163.com/weapi/v1/resource/comments/R_SO_4_186016/?csrf_token=",
+							Rule:   aid["Rule"].(string),
+							Method: "post",
+							//PostData: "params=EDegnd4Lwi8uPnPUYBgZAuhYKCi25JtXoOxAHPzjQqQuxjqMCVFZltaFAUUOtyhr2z3%2FAL7HU67DF3kIWMz6iqiafonsqsJ0pzE14o1dsDxOA8%2BaYEZ55ICivfnuJeZ0Oxuu7tcCr8tdXDVRfxPQsF1bbzgA8vnV5WoOgk2ITTIRPmc80fEHRdtY%2FY3kVFBS&encSecKey=62f38822dc22ec228c7d59ed389768479b6e1ccbb32cba72dcd2752d787bc2e86bc3bfba0764176b72455759d2a7a6d798ce69ac22b7103c4f669d1af2f8f7d6794f6d20cdf938869ccc00e8b9e2b699affc86a7b65fad0ae1575d88bcf02119fb743193526b6528447b2b527707d19c541fdb2899e9072cc7dc6d7638b0c1e2",
+							PostData: "params=tDcRMwjaL%2FQrCTIClHhKiWz7X6TrwJu%2F0EpnccpuCIZD7Bd9msm4DT9Nmm26EOmz08MGR%2F3W1n7Jg%2BQAQKEGUF%2B1IpW0Ze4bj%2FgbAQpydkbGL40Lkgr2iPIYk5rGQplkChUNYuBnsoLXE1gfF24OHvQ%2FoC2W0Mt7ZvqupSmTGl%2FbsYZUbXRW6AhwFn%2FCYbq2&encSecKey=088847ca15a7e0ef6c1ecf57a67d00491c90b8187af97d84aeac20a83d3df386d0c9e5d950943786d7b2ac4856a23d29f6318d41f16bbd7a55624c892eabd73d94546390cb924ad21a8ad9f607d757d4fc9cea6998b67bb69d167ec3ddff628234d83562a36757786533663d2b9bff58457bf3adda25735756d87db2008ac165",
 							Header:   map[string][]string{"referer": []string{"http://music.163.com/song?id=29728114"}},
 						},
 					)
@@ -344,16 +345,6 @@ var NMSpider = &Spider{
 					if err != nil {
 						log.Fatal(err)
 					}
-
-					//query.Find(".nm.nm-icn.f-thide.s-fc0").Each(func(i int, s *goquery.Selection) {
-					//	artistName := s.Text()
-					//	artistUrl, _ := s.Attr("href")
-					//
-					//	ctx.Output(map[int]interface{}{
-					//		0: artistName,
-					//		1: artistUrl,
-					//	})
-					//})
 				},
 			},
 		},
