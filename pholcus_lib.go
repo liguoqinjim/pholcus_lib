@@ -29,4 +29,5 @@ import (
 
 	//liguoqinjim
 	_ "github.com/liguoqinjim/pholcus_lib/netease_music"
+	_ "github.com/liguoqinjim/pholcus_lib/weibo_ask"
 )
