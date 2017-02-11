@@ -242,9 +242,7 @@ var WeiboAskSpider = &Spider{
 					}
 
 					for _, v := range askData.Data.List {
-						fmt.Printf("%+v\n", v)
 						ctx.Aid(map[string]interface{}{"data": v}, "查询答主问题价格")
-						break
 					}
 					//ctx.Aid(map[string]interface{}{"totalPage": totalPage, "fieldType": fieldType}, "按类按页查询答主")
 				},
