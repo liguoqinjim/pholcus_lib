@@ -27,6 +27,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	//json
+	"github.com/bitly/go-simplejson"
 )
 
 //答主的标签种类
@@ -122,6 +124,14 @@ func GetAnswererJson(content string) (*AnswererData, error) {
 	return &ask, err
 }
 
+//博主信息
+type WeiboUserInfo struct {
+	FollowNum      int
+	FriendNum      int
+	Description    string
+	VerifiedReason string
+}
+
 func init() {
 	WeiboAskSpider.Register()
 }
@@ -163,7 +173,12 @@ var WeiboAskSpider = &Spider{
 									},
 								},
 							)
+
+							//todo 测试
+							break
 						} else {
+							//todo 测试
+							break
 							var tempData = map[string]interface{}{"fieldType": k}
 							ctx.AddQueue(
 								&request.Request{
@@ -202,7 +217,7 @@ var WeiboAskSpider = &Spider{
 
 					if fieldType > 0 {
 						//todo 测试用 pageCount强制等于1
-						//pageCount = 1
+						pageCount = 1
 						for i := 1; i <= pageCount; i++ {
 							//注：这里用两个%d，不包含fieldType为负数的情况
 							url := fmt.Sprintf("http://e.weibo.com/v1/public/h5/aj/qa/getfamousanswer?fieldtype=%d&page=%d&pagesize=10", fieldType, i)
@@ -219,7 +234,7 @@ var WeiboAskSpider = &Spider{
 					} else {
 						for i := 1; i <= pageCount; i++ {
 							//todo 测试用 pageCount强制等于1
-							//pageCount = 1
+							pageCount = 1
 							url := fmt.Sprintf("http://e.weibo.com/v1/public/h5/aj/qa/getfamousanswer?fieldtype=%s&page=%d&pagesize=10", FieldTypes[fieldType], i)
 							ctx.AddQueue(
 								&request.Request{
@@ -243,12 +258,159 @@ var WeiboAskSpider = &Spider{
 
 					for _, v := range askData.Data.List {
 						ctx.Aid(map[string]interface{}{"data": v}, "查询答主问题价格")
+						//todo 测试
+						break
 					}
 					//ctx.Aid(map[string]interface{}{"totalPage": totalPage, "fieldType": fieldType}, "按类按页查询答主")
 				},
 			},
 
 			"查询答主问题价格": {
+				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
+					askData := aid["data"].(AskerData)
+
+					//http://e.weibo.com/v1/public/h5/aj/qa/getauthor?uid=2146965345
+					uid := strings.Split(askData.Content_url, "=")[1]
+					url := fmt.Sprintf("http://e.weibo.com/v1/public/h5/aj/qa/getauthor?uid=%s", uid)
+					ctx.AddQueue(
+						&request.Request{
+							Url: url,
+							Header: http.Header{
+								"Cookie":  []string{ask_cookies2},
+								"referer": []string{askData.Content_url},
+							},
+							Temp: aid,
+							Rule: "查询答主问题价格",
+						},
+					)
+
+					return nil
+				},
+				ParseFunc: func(ctx *Context) {
+					tmpData := ctx.GetTemp("data", "test")
+					var askData AskerData
+					if tmpData != "test" {
+						askData = tmpData.(AskerData)
+					} else {
+						return
+					}
+
+					answererData, err := GetAnswererJson(ctx.GetDom().Text())
+					if err != nil {
+						fmt.Println("err=", err)
+						return
+					}
+
+					ctx.Aid(map[string]interface{}{"data": askData, "answererData": answererData}, "查询博主粉丝量")
+				},
+			},
+
+			"查询博主粉丝量": {
+				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
+					askData := aid["data"].(AskerData)
+
+					uid := strings.Split(askData.Content_url, "=")[1]
+					//注 这个链接里面有个from，出错的时候可以改这个地方
+					url := fmt.Sprintf("http://api.weibo.cn/2/profile?networktype=wifi&uicode=10000198&moduleID=708&user_domain=%s&wb_version=3319&c=android&ua=LENOVO-Lenovo%20A3300-T__weibo__7.0.0__android__android4.4.2&wm=2468_1001&uid=%s&v_f=2&v_p=43&from=1070095010&lang=zh_CN&skin=default&oldwm=2468_1001&sflag=1&cover_width=720&luicode=80000001", uid, uid)
+					ctx.AddQueue(
+						&request.Request{
+							Url:  url,
+							Temp: aid,
+							Rule: "查询博主粉丝量",
+						},
+					)
+
+					return nil
+				},
+				ParseFunc: func(ctx *Context) {
+					tmpData := ctx.GetTemp("data", "test")
+					var askData AskerData
+					if tmpData != "test" {
+						askData = tmpData.(AskerData)
+					} else {
+						return
+					}
+
+					tmpData2 := ctx.GetTemp("answererData", "test2")
+					var answererData *AnswererData
+					if tmpData2 != "test2" {
+						answererData = tmpData2.(*AnswererData)
+					} else {
+						return
+					}
+
+					fmt.Println(ctx.GetDom().Text())
+					json1, err := simplejson.NewJson([]byte(ctx.GetDom().Text()))
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
+					follow_num, _ := json1.Get("userInfo").Get("followers_count").Int()
+					friend_num, _ := json1.Get("userInfo").Get("friends_count").Int()
+					desp, _ := json1.Get("userInfo").Get("description").String()
+					reason, _ := json1.Get("userInfo").Get("verified_reason").String()
+
+					weiboUserinfo := &WeiboUserInfo{FollowNum: follow_num, FriendNum: friend_num, Description: desp, VerifiedReason: reason}
+					//fmt.Printf("%+v\n", weiboUserinfo)
+					//fmt.Printf("%+v\n", askData)
+					//fmt.Printf("%+v\n", answererData)
+
+					ctx.Aid(map[string]interface{}{"data": askData, "answererData": answererData, "weiboUserInfo": weiboUserinfo}, "查询博主最近的微博的评论数和点赞数")
+				},
+			},
+
+			"查询博主最近的微博的评论数和点赞数": {
+				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
+					askData := aid["data"].(AskerData)
+
+					uid := strings.Split(askData.Content_url, "=")[1]
+					//注 这个链接里面有个from，出错的时候可以改这个地方
+					url := fmt.Sprintf("http://api.weibo.cn/2/profile?networktype=wifi&uicode=10000198&moduleID=708&user_domain=%s&wb_version=3319&c=android&ua=LENOVO-Lenovo%20A3300-T__weibo__7.0.0__android__android4.4.2&wm=2468_1001&uid=%s&v_f=2&v_p=43&from=1070095010&lang=zh_CN&skin=default&oldwm=2468_1001&sflag=1&cover_width=720&luicode=80000001", uid, uid)
+					ctx.AddQueue(
+						&request.Request{
+							Url:  url,
+							Temp: aid,
+							Rule: "查询博主粉丝量",
+						},
+					)
+
+					return nil
+				},
+				ParseFunc: func(ctx *Context) {
+					tmpData := ctx.GetTemp("data", "test")
+					var askData AskerData
+					if tmpData != "test" {
+						askData = tmpData.(AskerData)
+					} else {
+						return
+					}
+
+					tmpData2 := ctx.GetTemp("answererData", "test2")
+					var answererData *AnswererData
+					if tmpData2 != "test2" {
+						answererData = tmpData2.(*AnswererData)
+					} else {
+						return
+					}
+
+					fmt.Println(ctx.GetDom().Text())
+					json1, err := simplejson.NewJson([]byte(ctx.GetDom().Text()))
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
+					follow_num, _ := json1.Get("userInfo").Get("followers_count").Int()
+					friend_num, _ := json1.Get("userInfo").Get("friends_count").Int()
+					desp, _ := json1.Get("userInfo").Get("description").String()
+					reason, _ := json1.Get("userInfo").Get("verified_reason").String()
+
+					weiboUserinfo := &WeiboUserInfo{FollowNum: follow_num, FriendNum: friend_num, Description: desp, VerifiedReason: reason}
+
+					ctx.Aid(map[string]interface{}{"data": askData, "answererData": answererData, "weiboUserInfo": weiboUserinfo}, "查询博主最近的微博的评论数和点赞数")
+				},
+			},
+
+			"查询答主问题价格(原先存数据的)": {
 				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
 					askData := aid["data"].(AskerData)
 
