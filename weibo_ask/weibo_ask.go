@@ -339,7 +339,6 @@ var WeiboAskSpider = &Spider{
 						return
 					}
 
-					fmt.Println(ctx.GetDom().Text())
 					json1, err := simplejson.NewJson([]byte(ctx.GetDom().Text()))
 					if err != nil {
 						fmt.Println(err)
@@ -365,12 +364,12 @@ var WeiboAskSpider = &Spider{
 
 					uid := strings.Split(askData.Content_url, "=")[1]
 					//注 这个链接里面有个from，出错的时候可以改这个地方
-					url := fmt.Sprintf("http://api.weibo.cn/2/profile?networktype=wifi&uicode=10000198&moduleID=708&user_domain=%s&wb_version=3319&c=android&ua=LENOVO-Lenovo%20A3300-T__weibo__7.0.0__android__android4.4.2&wm=2468_1001&uid=%s&v_f=2&v_p=43&from=1070095010&lang=zh_CN&skin=default&oldwm=2468_1001&sflag=1&cover_width=720&luicode=80000001", uid, uid)
+					url := fmt.Sprintf("http://api.weibo.cn/2/cardlist?networktype=wifi&uicode=10000198&moduleID=708&wb_version=3319&c=android&i=61e6992&s=773ce9dd&ua=LENOVO-Lenovo%20A3300-T__weibo__7.0.0__android__android4.4.2&wm=2468_1001&aid=01ApIEZ_RFW8QFgeOItuEYX1q0tJxDA9C2a8HBmnmEK9iF5K8.&fid=1076031676582524_-_WEIBO_SECOND_PROFILE_WEIBO_ORI&uid=%s&v_f=2&v_p=43&from=1070095010&gsid=_2A251mR_mDeRxGeBP6FcQ9inFwzuIHXVUDxQurDV6PUJbkdAKLWLNkWqGgIgE5Wp6TnD5OhJDNlfHzIu_Gw..&imsi=460073497246957&lang=zh_CN&page=1&skin=default&count=20&oldwm=2468_1001&sflag=1&containerid=1076031676582524_-_WEIBO_SECOND_PROFILE_WEIBO_ORI&luicode=80000001&need_head_cards=0", uid)
 					ctx.AddQueue(
 						&request.Request{
 							Url:  url,
 							Temp: aid,
-							Rule: "查询博主粉丝量",
+							Rule: "查询博主最近的微博的评论数和点赞数",
 						},
 					)
 
@@ -393,20 +392,52 @@ var WeiboAskSpider = &Spider{
 						return
 					}
 
-					fmt.Println(ctx.GetDom().Text())
+					//fmt.Println(len(ctx.GetDom().Text()))
 					json1, err := simplejson.NewJson([]byte(ctx.GetDom().Text()))
 					if err != nil {
 						fmt.Println(err)
 						return
 					}
-					follow_num, _ := json1.Get("userInfo").Get("followers_count").Int()
-					friend_num, _ := json1.Get("userInfo").Get("friends_count").Int()
-					desp, _ := json1.Get("userInfo").Get("description").String()
-					reason, _ := json1.Get("userInfo").Get("verified_reason").String()
-
-					weiboUserinfo := &WeiboUserInfo{FollowNum: follow_num, FriendNum: friend_num, Description: desp, VerifiedReason: reason}
-
-					ctx.Aid(map[string]interface{}{"data": askData, "answererData": answererData, "weiboUserInfo": weiboUserinfo}, "查询博主最近的微博的评论数和点赞数")
+					sum := 0
+					maxAtti := 0
+					//minAtti := 0
+					maxComment := 0
+					//minComment := 0
+					json2, err := json1.Array()
+					for i := 0; i < len(json2); i++ {
+						atti, err2 := json1.GetIndex(i).Get("mblog").Get("attitudes_count").Int()
+						if err2 != nil {
+							continue
+						}
+						comment, err3 := json1.GetIndex(i).Get("mblog").Get("comments_count").Int()
+						if err3 != nil {
+							continue
+						}
+						sum++
+						if comment > maxComment {
+							maxComment = comment
+						}
+						if atti > maxAtti {
+							maxAtti = atti
+						}
+					}
+					fmt.Println("sum", sum, "maxAtti", maxAtti, "maxcommment", maxComment)
+					//if err != nil {
+					//	fmt.Println(err)
+					//	return
+					//}
+					//follow_num, _ := json1.Get("userInfo").Get("followers_count").Int()
+					//friend_num, _ := json1.Get("userInfo").Get("friends_count").Int()
+					//desp, _ := json1.Get("userInfo").Get("description").String()
+					//reason, _ := json1.Get("userInfo").Get("verified_reason").String()
+					//
+					//weiboUserinfo := &WeiboUserInfo{FollowNum: follow_num, FriendNum: friend_num, Description: desp, VerifiedReason: reason}
+					//
+					a := 1
+					if a != 1 {
+						fmt.Println(askData, answererData)
+					}
+					//ctx.Aid(map[string]interface{}{"data": askData, "answererData": answererData, "weiboUserInfo": weiboUserinfo}, "查询博主最近的微博的评论数和点赞数")
 				},
 			},
 
