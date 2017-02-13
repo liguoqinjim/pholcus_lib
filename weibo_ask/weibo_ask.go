@@ -310,8 +310,8 @@ var WeiboAskSpider = &Spider{
 					askData := aid["data"].(AskerData)
 
 					uid := strings.Split(askData.Content_url, "=")[1]
-					//注 这个链接里面有个from，出错的时候可以改这个地方
-					url := fmt.Sprintf("http://api.weibo.cn/2/profile?networktype=wifi&uicode=10000198&moduleID=708&user_domain=%s&wb_version=3319&c=android&ua=LENOVO-Lenovo%20A3300-T__weibo__7.0.0__android__android4.4.2&wm=2468_1001&uid=%s&v_f=2&v_p=43&from=1070095010&lang=zh_CN&skin=default&oldwm=2468_1001&sflag=1&cover_width=720&luicode=80000001", uid, uid)
+					//注 这个链接里面有个from，出错的时候可以改这个地方  %%转义
+					url := fmt.Sprintf("http://api.weibo.cn/2/profile?networktype=wifi&uicode=10000198&moduleID=708&user_domain=%s&wb_version=3319&c=android&ua=LENOVO-Lenovo%%20A3300-T__weibo__7.0.0__android__android4.4.2&wm=2468_1001&uid=%s&v_f=2&v_p=43&from=1070095010&lang=zh_CN&skin=default&oldwm=2468_1001&sflag=1&cover_width=720&luicode=80000001", uid, uid)
 					ctx.AddQueue(
 						&request.Request{
 							Url:  url,
@@ -375,6 +375,19 @@ var WeiboAskSpider = &Spider{
 
 					return nil
 				},
+				ItemFields: []string{
+					"微博名",
+					"标签",
+					"被围观次数",
+					"回答问题次数",
+					"提问价格",
+					"粉丝数",
+					"最近微博平均回复数",
+					"最近微博平均点赞数",
+					"最近微博最大回复数",
+					"最近微博最大点赞数",
+					"最近微博数量",
+				},
 				ParseFunc: func(ctx *Context) {
 					tmpData := ctx.GetTemp("data", "test")
 					var askData AskerData
@@ -392,7 +405,14 @@ var WeiboAskSpider = &Spider{
 						return
 					}
 
-					//fmt.Println(len(ctx.GetDom().Text()))
+					tmpData3 := ctx.GetTemp("weiboUserInfo", "test3")
+					var weiboUserInfo *WeiboUserInfo
+					if tmpData3 != "test3" {
+						weiboUserInfo = tmpData3.(*WeiboUserInfo)
+					} else {
+						return
+					}
+
 					json1, err := simplejson.NewJson([]byte(ctx.GetDom().Text()))
 					if err != nil {
 						fmt.Println(err)
@@ -400,17 +420,19 @@ var WeiboAskSpider = &Spider{
 					}
 					sum := 0
 					maxAtti := 0
-					//minAtti := 0
+					attis := 0
 					maxComment := 0
-					//minComment := 0
-					json2, err := json1.Array()
+					comments := 0
+					json2, err := json1.Get("cards").Array()
 					for i := 0; i < len(json2); i++ {
-						atti, err2 := json1.GetIndex(i).Get("mblog").Get("attitudes_count").Int()
+						atti, err2 := json1.Get("cards").GetIndex(i).Get("mblog").Get("attitudes_count").Int()
 						if err2 != nil {
+							fmt.Println("err2=", err2)
 							continue
 						}
-						comment, err3 := json1.GetIndex(i).Get("mblog").Get("comments_count").Int()
+						comment, err3 := json1.Get("cards").GetIndex(i).Get("mblog").Get("comments_count").Int()
 						if err3 != nil {
+							fmt.Println("err3=", err3)
 							continue
 						}
 						sum++
@@ -420,24 +442,23 @@ var WeiboAskSpider = &Spider{
 						if atti > maxAtti {
 							maxAtti = atti
 						}
+						attis += atti
+						comments += comment
 					}
-					fmt.Println("sum", sum, "maxAtti", maxAtti, "maxcommment", maxComment)
-					//if err != nil {
-					//	fmt.Println(err)
-					//	return
-					//}
-					//follow_num, _ := json1.Get("userInfo").Get("followers_count").Int()
-					//friend_num, _ := json1.Get("userInfo").Get("friends_count").Int()
-					//desp, _ := json1.Get("userInfo").Get("description").String()
-					//reason, _ := json1.Get("userInfo").Get("verified_reason").String()
-					//
-					//weiboUserinfo := &WeiboUserInfo{FollowNum: follow_num, FriendNum: friend_num, Description: desp, VerifiedReason: reason}
-					//
-					a := 1
-					if a != 1 {
-						fmt.Println(askData, answererData)
-					}
-					//ctx.Aid(map[string]interface{}{"data": askData, "answererData": answererData, "weiboUserInfo": weiboUserinfo}, "查询博主最近的微博的评论数和点赞数")
+
+					ctx.Output(map[int]interface{}{
+						0:  askData.Nickname,
+						1:  answererData.Data.Author_info.Label,
+						2:  askData.Look_num,
+						3:  answererData.Data.Total_count,
+						4:  answererData.Data.Author_info.Price,
+						5:  weiboUserInfo.FollowNum,
+						6:  float64(comments / sum),
+						7:  float64(attis / sum),
+						8:  maxComment,
+						9:  maxAtti,
+						10: sum,
+					})
 				},
 			},
 
