@@ -175,10 +175,10 @@ var WeiboAskSpider = &Spider{
 							)
 
 							//todo 测试
-							break
+							//break
 						} else {
 							//todo 测试
-							break
+							//break
 							var tempData = map[string]interface{}{"fieldType": k}
 							ctx.AddQueue(
 								&request.Request{
@@ -217,7 +217,7 @@ var WeiboAskSpider = &Spider{
 
 					if fieldType > 0 {
 						//todo 测试用 pageCount强制等于1
-						pageCount = 1
+						//pageCount = 1
 						for i := 1; i <= pageCount; i++ {
 							//注：这里用两个%d，不包含fieldType为负数的情况
 							url := fmt.Sprintf("http://e.weibo.com/v1/public/h5/aj/qa/getfamousanswer?fieldtype=%d&page=%d&pagesize=10", fieldType, i)
@@ -234,7 +234,7 @@ var WeiboAskSpider = &Spider{
 					} else {
 						for i := 1; i <= pageCount; i++ {
 							//todo 测试用 pageCount强制等于1
-							pageCount = 1
+							//pageCount = 1
 							url := fmt.Sprintf("http://e.weibo.com/v1/public/h5/aj/qa/getfamousanswer?fieldtype=%s&page=%d&pagesize=10", FieldTypes[fieldType], i)
 							ctx.AddQueue(
 								&request.Request{
@@ -259,7 +259,7 @@ var WeiboAskSpider = &Spider{
 					for _, v := range askData.Data.List {
 						ctx.Aid(map[string]interface{}{"data": v}, "查询答主问题价格")
 						//todo 测试
-						break
+						//break
 					}
 					//ctx.Aid(map[string]interface{}{"totalPage": totalPage, "fieldType": fieldType}, "按类按页查询答主")
 				},
@@ -301,7 +301,11 @@ var WeiboAskSpider = &Spider{
 						return
 					}
 
-					ctx.Aid(map[string]interface{}{"data": askData, "answererData": answererData}, "查询博主粉丝量")
+					//旧
+					ctx.Aid(map[string]interface{}{"data": askData, "answererData": answererData}, "查询答主问题价格(原先存数据的)")
+
+					//查询博主粉丝数量 暂时不用
+					//ctx.Aid(map[string]interface{}{"data": askData, "answererData": answererData}, "查询博主粉丝量")
 				},
 			},
 
@@ -477,7 +481,7 @@ var WeiboAskSpider = &Spider{
 								"referer": []string{askData.Content_url},
 							},
 							Temp: aid,
-							Rule: "查询答主问题价格",
+							Rule: "查询答主问题价格(原先存数据的)",
 						},
 					)
 
