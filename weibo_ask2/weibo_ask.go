@@ -28,7 +28,7 @@ import (
 	"fmt"
 	"net/http"
 	//json
-	//"github.com/bitly/go-simplejson"
+	"github.com/bitly/go-simplejson"
 )
 
 //答主的标签种类
@@ -303,7 +303,7 @@ var WeiboAskSpider = &Spider{
 
 					total_count, _ := strconv.Atoi(answererData.Data.Total_count)
 					if total_count > 0 {
-						fmt.Printf("%+v\n", answererData.Data.Pager_info)
+						//fmt.Printf("%+v\n", answererData.Data.Pager_info)
 						ctx.Aid(map[string]interface{}{"data": askData, "answererData": answererData}, "查询问题")
 					}
 				},
@@ -311,59 +311,166 @@ var WeiboAskSpider = &Spider{
 
 			"查询问题": {
 				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
-					fmt.Println("查询问题")
 					askData := aid["data"].(*AskerData)
 					answererData := aid["answererData"].(*AnswererData)
-					fmt.Printf("%+v\n", askData)
-					fmt.Printf("%+v\n", answererData)
-					return nil
 
-					//http://e.weibo.com/v1/public/aj/qa/getselleranswer?uid=1979899604&page=2
-					uid := strings.Split(askData.Content_url, "=")[1]
-					url := fmt.Sprintf("http://e.weibo.com/v1/public/h5/aj/qa/getauthor?uid=%s", uid)
-					ctx.AddQueue(
-						&request.Request{
-							Url: url,
-							Header: http.Header{
-								"Cookie":  []string{ask_cookies2},
-								"referer": []string{askData.Content_url},
-							},
-							Temp: aid,
-							Rule: "查询答主问题价格(原先存数据的)",
-						},
-					)
+					total_count, _ := strconv.Atoi(answererData.Data.Total_count)
+					if total_count > 0 {
+						for i := 1; i <= answererData.Data.Pager_info.Total_page; i++ {
+
+							//http://e.weibo.com/v1/public/aj/qa/getselleranswer?uid=1979899604&page=2
+							uid := strings.Split(askData.Content_url, "=")[1]
+							url := fmt.Sprintf("http://e.weibo.com/v1/public/aj/qa/getselleranswer?uid=%s&page=%d", uid, strconv.Itoa(i))
+							referer := fmt.Sprintf("http://e.weibo.com/v1/public/center/qauthor?uid=%s", uid)
+							ctx.AddQueue(
+								&request.Request{
+									Url: url,
+									Header: http.Header{
+										"Cookie":  []string{ask_cookies2},
+										"referer": []string{referer},
+									},
+									Temp: aid,
+									Rule: "查询问题",
+								},
+							)
+							//todo 测试
+							break
+						}
+					}
 
 					return nil
-				},
-				ItemFields: []string{
-					"微博名",
-					"标签",
-					"被围观次数",
-					"回答问题次数",
-					"提问价格",
 				},
 				ParseFunc: func(ctx *Context) {
-					tmpData := ctx.GetTemp("data", "test")
-					var askData AskerData
-					if tmpData != "test" {
-						askData = tmpData.(AskerData)
-					} else {
-						return
-					}
+					aid := ctx.GetTemps()
 
-					answererData, err := GetAnswererJson(ctx.GetDom().Text())
+					json1, err := simplejson.NewJson([]byte(ctx.GetDom().Text()))
 					if err != nil {
-						fmt.Println("err=", err)
+						fmt.Println(err)
 						return
 					}
 
-					ctx.Output(map[int]interface{}{
-						0: askData.Nickname,
-						1: answererData.Data.Author_info.Label,
-						2: askData.Look_num,
-						3: answererData.Data.Total_count,
-						4: answererData.Data.Author_info.Price,
-					})
+					json2, err := json1.Get("data").Get("list").Array()
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
+
+					for i := 0; i < len(json2); i++ {
+						content_url, _ := json1.Get("data").Get("list").GetIndex(i).Get("content_url").String()
+						aid["question_url"] = content_url
+
+						ctx.Aid(aid, "查询问题详细")
+						//todo 测试
+						break
+					}
+
+					//tmpData := ctx.GetTemp("data", "test")
+					//var askData AskerData
+					//if tmpData != "test" {
+					//	askData = tmpData.(AskerData)
+					//} else {
+					//	return
+					//}
+					//
+					//answererData, err := GetAnswererJson(ctx.GetDom().Text())
+					//if err != nil {
+					//	fmt.Println("err=", err)
+					//	return
+					//}
+					//
+					//ctx.Output(map[int]interface{}{
+					//	0: askData.Nickname,
+					//	1: answererData.Data.Author_info.Label,
+					//	2: askData.Look_num,
+					//	3: answererData.Data.Total_count,
+					//	4: answererData.Data.Author_info.Price,
+					//})
+				},
+			},
+
+			"查询问题详细": {
+				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
+					fmt.Println("查询问题详细11111")
+					return nil
+
+					askData := aid["data"].(*AskerData)
+					answererData := aid["answererData"].(*AnswererData)
+
+					total_count, _ := strconv.Atoi(answererData.Data.Total_count)
+					if total_count > 0 {
+						for i := 1; i <= answererData.Data.Pager_info.Total_page; i++ {
+
+							//http://e.weibo.com/v1/public/aj/qa/getselleranswer?uid=1979899604&page=2
+							uid := strings.Split(askData.Content_url, "=")[1]
+							url := fmt.Sprintf("http://e.weibo.com/v1/public/aj/qa/getselleranswer?uid=%s&page=%d", uid, strconv.Itoa(i))
+							referer := fmt.Sprintf("http://e.weibo.com/v1/public/center/qauthor?uid=%s", uid)
+							ctx.AddQueue(
+								&request.Request{
+									Url: url,
+									Header: http.Header{
+										"Cookie":  []string{ask_cookies2},
+										"referer": []string{referer},
+									},
+									Temp: aid,
+									Rule: "查询问题详细",
+								},
+							)
+							//todo 测试
+							break
+						}
+					}
+
+					return nil
+				},
+				ParseFunc: func(ctx *Context) {
+					//json1, err := simplejson.NewJson([]byte(ctx.GetDom().Text()))
+					//if err != nil {
+					//	fmt.Println(err)
+					//	return
+					//}
+					//follow_num, _ := json1.Get("userInfo").Get("followers_count").Int()
+					//friend_num, _ := json1.Get("userInfo").Get("friends_count").Int()
+					//desp, _ := json1.Get("userInfo").Get("description").String()
+					//reason, _ := json1.Get("userInfo").Get("verified_reason").String()
+
+					json1, err := simplejson.NewJson([]byte(ctx.GetDom().Text()))
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
+
+					json2, err := json1.Get("data").Get("list").Array()
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
+
+					for i := 0; i < len(json2); i++ {
+						content_url, _ := json1.Get("data").Get("list").GetIndex(i).Get("content_url").String()
+						fmt.Println(content_url)
+					}
+
+					//tmpData := ctx.GetTemp("data", "test")
+					//var askData AskerData
+					//if tmpData != "test" {
+					//	askData = tmpData.(AskerData)
+					//} else {
+					//	return
+					//}
+					//
+					//answererData, err := GetAnswererJson(ctx.GetDom().Text())
+					//if err != nil {
+					//	fmt.Println("err=", err)
+					//	return
+					//}
+					//
+					//ctx.Output(map[int]interface{}{
+					//	0: askData.Nickname,
+					//	1: answererData.Data.Author_info.Label,
+					//	2: askData.Look_num,
+					//	3: answererData.Data.Total_count,
+					//	4: answererData.Data.Author_info.Price,
+					//})
 				},
 			},
 
