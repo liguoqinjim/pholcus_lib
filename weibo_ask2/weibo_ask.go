@@ -28,7 +28,7 @@ import (
 	"fmt"
 	"net/http"
 	//json
-	"github.com/bitly/go-simplejson"
+	//"github.com/bitly/go-simplejson"
 )
 
 //答主的标签种类
@@ -257,7 +257,7 @@ var WeiboAskSpider = &Spider{
 					}
 
 					for _, v := range askData.Data.List {
-						ctx.Aid(map[string]interface{}{"data": v}, "查询答主问题价格")
+						ctx.Aid(map[string]interface{}{"data": &v}, "查询答主问题价格")
 						//todo 测试
 						break
 					}
@@ -267,7 +267,7 @@ var WeiboAskSpider = &Spider{
 
 			"查询答主问题价格": {
 				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
-					askData := aid["data"].(AskerData)
+					askData := aid["data"].(*AskerData)
 
 					//http://e.weibo.com/v1/public/h5/aj/qa/getauthor?uid=2146965345
 					uid := strings.Split(askData.Content_url, "=")[1]
@@ -288,9 +288,9 @@ var WeiboAskSpider = &Spider{
 				},
 				ParseFunc: func(ctx *Context) {
 					tmpData := ctx.GetTemp("data", "test")
-					var askData AskerData
+					var askData *AskerData
 					if tmpData != "test" {
-						askData = tmpData.(AskerData)
+						askData = tmpData.(*AskerData)
 					} else {
 						return
 					}
@@ -301,20 +301,24 @@ var WeiboAskSpider = &Spider{
 						return
 					}
 
-					//if answererData.Data.Total_count > 0 {
-					//	fmt.Println("查询问题")
-					//}
-
-					//旧
-					ctx.Aid(map[string]interface{}{"data": askData, "answererData": answererData}, "查询答主问题价格(原先存数据的)")
+					total_count, _ := strconv.Atoi(answererData.Data.Total_count)
+					if total_count > 0 {
+						fmt.Printf("%+v\n", answererData.Data.Pager_info)
+						ctx.Aid(map[string]interface{}{"data": askData, "answererData": answererData}, "查询问题")
+					}
 				},
 			},
 
 			"查询问题": {
 				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
-					askData := aid["data"].(AskerData)
+					fmt.Println("查询问题")
+					askData := aid["data"].(*AskerData)
+					answererData := aid["answererData"].(*AnswererData)
+					fmt.Printf("%+v\n", askData)
+					fmt.Printf("%+v\n", answererData)
+					return nil
 
-					//http://e.weibo.com/v1/public/h5/aj/qa/getauthor?uid=2146965345
+					//http://e.weibo.com/v1/public/aj/qa/getselleranswer?uid=1979899604&page=2
 					uid := strings.Split(askData.Content_url, "=")[1]
 					url := fmt.Sprintf("http://e.weibo.com/v1/public/h5/aj/qa/getauthor?uid=%s", uid)
 					ctx.AddQueue(
