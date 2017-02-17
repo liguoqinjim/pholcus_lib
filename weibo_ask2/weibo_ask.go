@@ -31,6 +31,8 @@ import (
 	"github.com/bitly/go-simplejson"
 )
 
+var QuestionNum = 0
+
 //答主的标签种类
 var FieldTypes = map[int]string{
 	8:  "健康医疗",
@@ -368,7 +370,8 @@ var WeiboAskSpider = &Spider{
 					return nil
 				},
 				ParseFunc: func(ctx *Context) {
-					aid := ctx.GetTemps()
+					askData := ctx.GetTemp("data", "test").(AskerData)
+					answererData := ctx.GetTemp("answererData", "test").(*AnswererData)
 
 					json1, err := simplejson.NewJson([]byte(ctx.GetDom().Text()))
 					if err != nil {
@@ -387,10 +390,8 @@ var WeiboAskSpider = &Spider{
 					//fmt.Println("查询问题-->", len(json2))
 					for i := 0; i < len(json2); i++ {
 						content_url, _ := json1.Get("data").Get("list").GetIndex(i).Get("content_url").String()
-						//fmt.Println("content_url=", content_url)
-						aid["question_url"] = content_url
 
-						ctx.Aid(aid, "查询问题详细")
+						ctx.Aid(map[string]interface{}{"data": askData, "answererData": answererData, "question_url": content_url}, "查询问题详细")
 						//todo 测试
 						if WeiboAskRunMode == "test" {
 							break
@@ -422,12 +423,17 @@ var WeiboAskSpider = &Spider{
 					return nil
 				},
 				ParseFunc: func(ctx *Context) {
+
 					json1, err := simplejson.NewJson([]byte(ctx.GetDom().Text()))
 					if err != nil {
 						fmt.Println(err)
 						return
 					}
 					aid := ctx.GetTemps()
+
+					askData := ctx.GetTemp("data", "test").(AskerData)
+					answererData := ctx.GetTemp("answererData", "test").(*AnswererData)
+					question_url := ctx.GetTemp("question_url", "test").(string)
 					aid["answer_detail"] = json1
 
 					//ask_content, _ := json1.Get("ask_content").String() //问题内容
@@ -446,8 +452,7 @@ var WeiboAskSpider = &Spider{
 					//json3 := json1.Get("asker")
 					//asker_id, _ := json3.Get("id").Int()
 					//asker_name, _ := json3.Get("name").String()
-
-					ctx.Aid(aid, "查询问题围观数")
+					ctx.Aid(map[string]interface{}{"data": askData, "answererData": answererData, "question_url": question_url, "answer_detail": json1}, "查询问题围观数")
 				},
 			},
 
