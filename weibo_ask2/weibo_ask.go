@@ -165,10 +165,9 @@ var WeiboAskSpider = &Spider{
 					for k, v := range FieldTypes {
 						if k > 0 {
 							//todo 测试
-							if k != 48 {
-								continue
-							}
-
+							//if k != 48 {
+							//	continue
+							//}
 							var tempData = map[string]interface{}{"fieldType": k}
 							ctx.AddQueue(
 								&request.Request{
@@ -187,13 +186,11 @@ var WeiboAskSpider = &Spider{
 							if WeiboAskRunMode == "test" {
 								break
 							}
-							break
 						} else {
 							//todo 测试
 							if WeiboAskRunMode == "test" {
 								break
 							}
-							break
 
 							var tempData = map[string]interface{}{"fieldType": k}
 							ctx.AddQueue(
@@ -236,7 +233,6 @@ var WeiboAskSpider = &Spider{
 						if WeiboAskRunMode == "test" {
 							pageCount = 1
 						}
-						pageCount = 1
 
 						for i := 1; i <= pageCount; i++ {
 							//注：这里用两个%d，不包含fieldType为负数的情况
