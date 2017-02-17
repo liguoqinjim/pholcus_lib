@@ -146,12 +146,12 @@ var ask_cookies2 = "SUB=_2A251mR_mDeRhGeBP6FcQ9inFwzuIHXVWtUuurDV8PUJbitAKLWrAkW
 var WeiboAskRunMode = "run"
 
 var WeiboAskSpider = &Spider{
-	Name:         "微博问答问题",
-	Description:  "微博问答问题爬虫",
-	Pausetime:    4000,
+	Name:        "微博问答问题",
+	Description: "微博问答问题爬虫",
+	//Pausetime:    4000,
 	Keyin:        KEYIN,
 	Limit:        LIMIT,
-	EnableCookie: false,
+	EnableCookie: true,
 	RuleTree: &RuleTree{
 		Root: func(ctx *Context) {
 			//Aid调用Rule中的AidFunc

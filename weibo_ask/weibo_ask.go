@@ -140,9 +140,9 @@ func init() {
 var ask_cookies2 = "SUB=_2A251mR_mDeRhGeBP6FcQ9inFwzuIHXVWtUuurDV8PUJbitAKLWrAkWtgXLKVDjW1uPm5b-j_sk-g9JE3aQ..; SUBP=0033WrSXqPxfM725Ws9jqgMF55529P9D9Wh.NW5WSuYsKu1Xkoev7WS45NHD95QceKefeKqN1KnNWs4DqcjMi--NiK.Xi-2Ri--ciKnRi-zNSo20SK2cS0.RS7tt; SCF=AnIMOiTPi591m41NyWBnF6hVAZTRxU4VG6Xc2AhuNBIH_CPB6ScH4PgQ1PxsGffSGQ..; SUHB=0mxU7Nhg2YNZng; _s_tentry=-; Apache=1935663854237.6458.1486712796058; SINAGLOBAL=1935663854237.6458.1486712796058; ULV=1486712796112:1:1:1:1935663854237.6458.1486712796058:"
 
 var WeiboAskSpider = &Spider{
-	Name:         "微博问答",
-	Description:  "微博问答爬虫",
-	Pausetime:    500,
+	Name:        "微博问答1",
+	Description: "微博问答爬虫",
+	//Pausetime:    12000,
 	Keyin:        KEYIN,
 	Limit:        LIMIT,
 	EnableCookie: false,
