@@ -140,6 +140,7 @@ func init() {
 var ask_cookies2 = "SUB=_2A251mR_mDeRhGeBP6FcQ9inFwzuIHXVWtUuurDV8PUJbitAKLWrAkWtgXLKVDjW1uPm5b-j_sk-g9JE3aQ..; SUBP=0033WrSXqPxfM725Ws9jqgMF55529P9D9Wh.NW5WSuYsKu1Xkoev7WS45NHD95QceKefeKqN1KnNWs4DqcjMi--NiK.Xi-2Ri--ciKnRi-zNSo20SK2cS0.RS7tt; SCF=AnIMOiTPi591m41NyWBnF6hVAZTRxU4VG6Xc2AhuNBIH_CPB6ScH4PgQ1PxsGffSGQ..; SUHB=0mxU7Nhg2YNZng; _s_tentry=-; Apache=1935663854237.6458.1486712796058; SINAGLOBAL=1935663854237.6458.1486712796058; ULV=1486712796112:1:1:1:1935663854237.6458.1486712796058:"
 
 //var WeiboAskRunMode = "test"
+
 var WeiboAskRunMode = "run"
 
 var WeiboAskSpider = &Spider{
@@ -162,7 +163,10 @@ var WeiboAskSpider = &Spider{
 					for k, v := range FieldTypes {
 						if k > 0 {
 							//todo 测试
-							//continue
+							if k != 48 {
+								continue
+							}
+
 							var tempData = map[string]interface{}{"fieldType": k}
 							ctx.AddQueue(
 								&request.Request{
@@ -181,11 +185,13 @@ var WeiboAskSpider = &Spider{
 							if WeiboAskRunMode == "test" {
 								break
 							}
+							break
 						} else {
 							//todo 测试
 							if WeiboAskRunMode == "test" {
 								break
 							}
+							break
 
 							var tempData = map[string]interface{}{"fieldType": k}
 							ctx.AddQueue(
@@ -228,6 +234,7 @@ var WeiboAskSpider = &Spider{
 						if WeiboAskRunMode == "test" {
 							pageCount = 1
 						}
+						pageCount = 1
 
 						for i := 1; i <= pageCount; i++ {
 							//注：这里用两个%d，不包含fieldType为负数的情况
@@ -271,7 +278,8 @@ var WeiboAskSpider = &Spider{
 					}
 
 					for _, v := range askData.Data.List {
-						ctx.Aid(map[string]interface{}{"data": &v}, "查询答主问题价格")
+						//fmt.Printf("查询答主问题价格 %+v\n", v)
+						ctx.Aid(map[string]interface{}{"data": v}, "查询答主问题价格")
 						//todo 测试
 						if WeiboAskRunMode == "test" {
 							break
@@ -283,7 +291,7 @@ var WeiboAskSpider = &Spider{
 
 			"查询答主问题价格": {
 				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
-					askData := aid["data"].(*AskerData)
+					askData := aid["data"].(AskerData)
 
 					//http://e.weibo.com/v1/public/h5/aj/qa/getauthor?uid=2146965345
 					uid := strings.Split(askData.Content_url, "=")[1]
@@ -304,9 +312,9 @@ var WeiboAskSpider = &Spider{
 				},
 				ParseFunc: func(ctx *Context) {
 					tmpData := ctx.GetTemp("data", "test")
-					var askData *AskerData
+					var askData AskerData
 					if tmpData != "test" {
-						askData = tmpData.(*AskerData)
+						askData = tmpData.(AskerData)
 					} else {
 						return
 					}
@@ -327,14 +335,14 @@ var WeiboAskSpider = &Spider{
 
 			"查询问题": {
 				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
-					askData := aid["data"].(*AskerData)
+					askData := aid["data"].(AskerData)
 					answererData := aid["answererData"].(*AnswererData)
 
 					total_count, _ := strconv.Atoi(answererData.Data.Total_count)
 					if total_count > 0 {
 						for i := 1; i <= answererData.Data.Pager_info.Total_page; i++ {
-
 							//http://e.weibo.com/v1/public/aj/qa/getselleranswer?uid=1979899604&page=2
+
 							uid := strings.Split(askData.Content_url, "=")[1]
 							url := fmt.Sprintf("http://e.weibo.com/v1/public/aj/qa/getselleranswer?uid=%s&page=%d", uid, i)
 							referer := fmt.Sprintf("http://e.weibo.com/v1/public/center/qauthor?uid=%s", uid)
@@ -374,8 +382,12 @@ var WeiboAskSpider = &Spider{
 						return
 					}
 
+					//fmt.Println(ctx.Request.GetUrl())
+					//fmt.Println("查询问题---", ctx.GetDom().Text())
+					//fmt.Println("查询问题-->", len(json2))
 					for i := 0; i < len(json2); i++ {
 						content_url, _ := json1.Get("data").Get("list").GetIndex(i).Get("content_url").String()
+						//fmt.Println("content_url=", content_url)
 						aid["question_url"] = content_url
 
 						ctx.Aid(aid, "查询问题详细")
