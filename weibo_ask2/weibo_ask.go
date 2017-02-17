@@ -320,14 +320,15 @@ var WeiboAskSpider = &Spider{
 
 							//http://e.weibo.com/v1/public/aj/qa/getselleranswer?uid=1979899604&page=2
 							uid := strings.Split(askData.Content_url, "=")[1]
-							url := fmt.Sprintf("http://e.weibo.com/v1/public/aj/qa/getselleranswer?uid=%s&page=%d", uid, strconv.Itoa(i))
+							url := fmt.Sprintf("http://e.weibo.com/v1/public/aj/qa/getselleranswer?uid=%s&page=%d", uid, i)
 							referer := fmt.Sprintf("http://e.weibo.com/v1/public/center/qauthor?uid=%s", uid)
 							ctx.AddQueue(
 								&request.Request{
 									Url: url,
 									Header: http.Header{
-										"Cookie":  []string{ask_cookies2},
-										"referer": []string{referer},
+										"User-Agent": []string{"Mozilla/5.0 (Linux; Android 4.4.2; Lenovo A3300-T Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/30.0.0.0 Mobile Safari/537.36 Weibo (LENOVO-Lenovo A3300-T__weibo__7.0.0__android__android4.4.2)"},
+										"Cookie":     []string{ask_cookies2},
+										"referer":    []string{referer},
 									},
 									Temp: aid,
 									Rule: "查询问题",
@@ -363,114 +364,121 @@ var WeiboAskSpider = &Spider{
 						//todo 测试
 						break
 					}
-
-					//tmpData := ctx.GetTemp("data", "test")
-					//var askData AskerData
-					//if tmpData != "test" {
-					//	askData = tmpData.(AskerData)
-					//} else {
-					//	return
-					//}
-					//
-					//answererData, err := GetAnswererJson(ctx.GetDom().Text())
-					//if err != nil {
-					//	fmt.Println("err=", err)
-					//	return
-					//}
-					//
-					//ctx.Output(map[int]interface{}{
-					//	0: askData.Nickname,
-					//	1: answererData.Data.Author_info.Label,
-					//	2: askData.Look_num,
-					//	3: answererData.Data.Total_count,
-					//	4: answererData.Data.Author_info.Price,
-					//})
 				},
 			},
 
 			"查询问题详细": {
 				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
-					fmt.Println("查询问题详细11111")
-					return nil
+					question_url := aid["question_url"].(string)
 
-					askData := aid["data"].(*AskerData)
-					answererData := aid["answererData"].(*AnswererData)
-
-					total_count, _ := strconv.Atoi(answererData.Data.Total_count)
-					if total_count > 0 {
-						for i := 1; i <= answererData.Data.Pager_info.Total_page; i++ {
-
-							//http://e.weibo.com/v1/public/aj/qa/getselleranswer?uid=1979899604&page=2
-							uid := strings.Split(askData.Content_url, "=")[1]
-							url := fmt.Sprintf("http://e.weibo.com/v1/public/aj/qa/getselleranswer?uid=%s&page=%d", uid, strconv.Itoa(i))
-							referer := fmt.Sprintf("http://e.weibo.com/v1/public/center/qauthor?uid=%s", uid)
-							ctx.AddQueue(
-								&request.Request{
-									Url: url,
-									Header: http.Header{
-										"Cookie":  []string{ask_cookies2},
-										"referer": []string{referer},
-									},
-									Temp: aid,
-									Rule: "查询问题详细",
-								},
-							)
-							//todo 测试
-							break
-						}
-					}
+					question_id := strings.Split(question_url, "=")[1]
+					//注意：%号转义
+					url_temp := "http://api.weibo.cn/2/question/show?networktype=wifi&uicode=10000432&moduleID=700&wb_version=3319&c=android&i=61e6992&s=773ce9dd&ua=LENOVO-Lenovo%%20A3300-T__weibo__7.0.0__android__android4.4.2&wm=2468_1001&aid=01ApIEZ_RFW8QFgeOItuEYX1q0tJxDA9C2a8HBmnmEK9iF5K8.&oid=%s&v_f=2&from=1070095010&gsid=_2A251ofP_DeRxGeBP6FcQ9inFwzuIHXVUDxQurDV6PUJbkdAKLWLNkWqC3NU0yJ_c7bOoukrk9g-NKkmkKg..&lang=zh_CN&skin=default&vuid=6135167987&oldwm=2468_1001&sflag=1&luicode=80000001"
+					url := fmt.Sprintf(url_temp, question_id)
+					ctx.AddQueue(
+						&request.Request{
+							Url: url,
+							Header: http.Header{
+								"X-Log-Uid":  []string{"6135167987"},
+								"User-Agent": []string{"Lenovo A3300-T_4.4.2_weibo_7.0.0_android"},
+							},
+							Temp: aid,
+							Rule: "查询问题详细",
+						},
+					)
 
 					return nil
 				},
 				ParseFunc: func(ctx *Context) {
-					//json1, err := simplejson.NewJson([]byte(ctx.GetDom().Text()))
-					//if err != nil {
-					//	fmt.Println(err)
-					//	return
-					//}
-					//follow_num, _ := json1.Get("userInfo").Get("followers_count").Int()
-					//friend_num, _ := json1.Get("userInfo").Get("friends_count").Int()
-					//desp, _ := json1.Get("userInfo").Get("description").String()
-					//reason, _ := json1.Get("userInfo").Get("verified_reason").String()
-
 					json1, err := simplejson.NewJson([]byte(ctx.GetDom().Text()))
 					if err != nil {
 						fmt.Println(err)
 						return
 					}
+					aid := ctx.GetTemps()
+					aid["answer_detail"] = json1
 
-					json2, err := json1.Get("data").Get("list").Array()
+					//ask_content, _ := json1.Get("ask_content").String() //问题内容
+					//oid, _ := json1.Get("object_id").String()           //问题id
+					//qa_price, _ := json1.Get("qa_price").String()       //问题价格
+					//
+					//ask_at, _ := json1.Get("ask_at").String()           //问题时间
+					//answer_at, _ := json1.Get("answer_at").String()     //回答时间
+					//
+					//json2 := json1.Get("answerer")
+					//answerer_name, _ := json2.Get("name").String()
+					//answerer_id, _ := json2.Get("id").Int()
+					//followers_count, _ := json2.Get("followers_count").Int()
+					//description, _ := json2.Get("description").String()
+					//
+					//json3 := json1.Get("asker")
+					//asker_id, _ := json3.Get("id").Int()
+					//asker_name, _ := json3.Get("name").String()
+
+					ctx.Aid(aid, "查询问题围观数")
+				},
+			},
+
+			"查询问题围观数": {
+				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
+					question_url := aid["question_url"].(string)
+
+					question_id := strings.Split(question_url, "=")[1]
+					fid := strings.Split(question_id, ":")[1]
+					//注意：%号转义
+					url_temp := "http://api.weibo.cn/2/question/extend?networktype=wifi&uicode=10000432&moduleID=700&wb_version=3319&c=android&i=61e6992&s=773ce9dd&ua=LENOVO-Lenovo%%20A3300-T__weibo__7.0.0__android__android4.4.2&wm=2468_1001&aid=01ApIEZ_RFW8QFgeOItuEYX1q0tJxDA9C2a8HBmnmEK9iF5K8.&fid=%s&oid=%s&v_f=2&from=1070095010&gsid=_2A251ofP_DeRxGeBP6FcQ9inFwzuIHXVUDxQurDV6PUJbkdAKLWLNkWqC3NU0yJ_c7bOoukrk9g-NKkmkKg..&lang=zh_CN&read=false&skin=default&vuid=6135167987&oldwm=2468_1001&sflag=1&luicode=80000001"
+					url := fmt.Sprintf(url_temp, fid, question_id)
+					ctx.AddQueue(
+						&request.Request{
+							Url: url,
+							Header: http.Header{
+								"X-Log-Uid":  []string{"6135167987"},
+								"User-Agent": []string{"Lenovo A3300-T_4.4.2_weibo_7.0.0_android"},
+							},
+							Temp: aid,
+							Rule: "查询问题围观数",
+						},
+					)
+
+					return nil
+				},
+				ItemFields: []string{
+					"问题内容",
+					"问题id",
+					"问题价格",
+					"问题围观数",
+					"问题时间",
+					"回答时间",
+				},
+				ParseFunc: func(ctx *Context) {
+					jsonA, err := simplejson.NewJson([]byte(ctx.GetDom().Text()))
 					if err != nil {
 						fmt.Println(err)
 						return
 					}
+					interact_count, _ := jsonA.Get("interact_user_info").Get("interact_count").String()
 
-					for i := 0; i < len(json2); i++ {
-						content_url, _ := json1.Get("data").Get("list").GetIndex(i).Get("content_url").String()
-						fmt.Println(content_url)
-					}
+					json1 := ctx.GetTemps()["answer_detail"].(*simplejson.Json)
+					ask_content, _ := json1.Get("ask_content").String() //问题内容
+					oid, _ := json1.Get("object_id").String()           //问题id
+					qa_price, _ := json1.Get("qa_price").String()       //问题价格
+					ask_at, _ := json1.Get("ask_at").String()           //问题时间
+					answer_at, _ := json1.Get("answer_at").String()     //回答时间
+					json2 := json1.Get("answerer")
+					answerer_name, _ := json2.Get("name").String()
+					answerer_id, _ := json2.Get("id").Int()
+					followers_count, _ := json2.Get("followers_count").Int()
+					description, _ := json2.Get("description").String()
+					json3 := json1.Get("asker")
+					asker_id, _ := json3.Get("id").Int()
+					asker_name, _ := json3.Get("name").String()
 
-					//tmpData := ctx.GetTemp("data", "test")
-					//var askData AskerData
-					//if tmpData != "test" {
-					//	askData = tmpData.(AskerData)
-					//} else {
-					//	return
-					//}
-					//
-					//answererData, err := GetAnswererJson(ctx.GetDom().Text())
-					//if err != nil {
-					//	fmt.Println("err=", err)
-					//	return
-					//}
-					//
-					//ctx.Output(map[int]interface{}{
-					//	0: askData.Nickname,
-					//	1: answererData.Data.Author_info.Label,
-					//	2: askData.Look_num,
-					//	3: answererData.Data.Total_count,
-					//	4: answererData.Data.Author_info.Price,
-					//})
+					fmt.Println(ask_content)
+					fmt.Println(oid, qa_price, ask_at, answer_at)
+					fmt.Println(answerer_id, answerer_name, followers_count)
+					fmt.Println(asker_id, asker_name)
+					fmt.Println(description)
+					fmt.Println(interact_count)
 				},
 			},
 
