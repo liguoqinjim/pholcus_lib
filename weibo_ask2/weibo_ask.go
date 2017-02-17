@@ -148,7 +148,7 @@ var WeiboAskRunMode = "test"
 var WeiboAskSpider = &Spider{
 	Name:         "微博问答问题",
 	Description:  "微博问答问题爬虫",
-	Pausetime:    500,
+	Pausetime:    2000,
 	Keyin:        KEYIN,
 	Limit:        LIMIT,
 	EnableCookie: false,
@@ -521,59 +521,6 @@ var WeiboAskSpider = &Spider{
 						3: interact_count, 4: ask_at, 5: answer_at,
 						6: answerer_name, 7: answerer_id, 8: followers_count, 9: description,
 						10: asker_name, 11: asker_id,
-					})
-				},
-			},
-
-			"查询答主问题价格(原先存数据的)": {
-				AidFunc: func(ctx *Context, aid map[string]interface{}) interface{} {
-					askData := aid["data"].(AskerData)
-
-					//http://e.weibo.com/v1/public/h5/aj/qa/getauthor?uid=2146965345
-					uid := strings.Split(askData.Content_url, "=")[1]
-					url := fmt.Sprintf("http://e.weibo.com/v1/public/h5/aj/qa/getauthor?uid=%s", uid)
-					ctx.AddQueue(
-						&request.Request{
-							Url: url,
-							Header: http.Header{
-								"Cookie":  []string{ask_cookies2},
-								"referer": []string{askData.Content_url},
-							},
-							Temp: aid,
-							Rule: "查询答主问题价格(原先存数据的)",
-						},
-					)
-
-					return nil
-				},
-				ItemFields: []string{
-					"微博名",
-					"标签",
-					"被围观次数",
-					"回答问题次数",
-					"提问价格",
-				},
-				ParseFunc: func(ctx *Context) {
-					tmpData := ctx.GetTemp("data", "test")
-					var askData AskerData
-					if tmpData != "test" {
-						askData = tmpData.(AskerData)
-					} else {
-						return
-					}
-
-					answererData, err := GetAnswererJson(ctx.GetDom().Text())
-					if err != nil {
-						fmt.Println("err=", err)
-						return
-					}
-
-					ctx.Output(map[int]interface{}{
-						0: askData.Nickname,
-						1: answererData.Data.Author_info.Label,
-						2: askData.Look_num,
-						3: answererData.Data.Total_count,
-						4: answererData.Data.Author_info.Price,
 					})
 				},
 			},
