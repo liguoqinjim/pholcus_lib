@@ -449,6 +449,12 @@ var WeiboAskSpider = &Spider{
 					"问题围观数",
 					"问题时间",
 					"回答时间",
+					"答题者微博名",
+					"答题者id",
+					"答题者粉丝数",
+					"答题者描述",
+					"提问者微博名",
+					"提问者id",
 				},
 				ParseFunc: func(ctx *Context) {
 					jsonA, err := simplejson.NewJson([]byte(ctx.GetDom().Text()))
@@ -464,21 +470,25 @@ var WeiboAskSpider = &Spider{
 					qa_price, _ := json1.Get("qa_price").String()       //问题价格
 					ask_at, _ := json1.Get("ask_at").String()           //问题时间
 					answer_at, _ := json1.Get("answer_at").String()     //回答时间
+
 					json2 := json1.Get("answerer")
 					answerer_name, _ := json2.Get("name").String()
 					answerer_id, _ := json2.Get("id").Int()
 					followers_count, _ := json2.Get("followers_count").Int()
 					description, _ := json2.Get("description").String()
+
 					json3 := json1.Get("asker")
 					asker_id, _ := json3.Get("id").Int()
 					asker_name, _ := json3.Get("name").String()
 
-					fmt.Println(ask_content)
-					fmt.Println(oid, qa_price, ask_at, answer_at)
-					fmt.Println(answerer_id, answerer_name, followers_count)
-					fmt.Println(asker_id, asker_name)
-					fmt.Println(description)
-					fmt.Println(interact_count)
+					ctx.Output(map[int]interface{}{
+						0: ask_content,
+						1: oid,
+						2: qa_price,
+						3: interact_count, 4: ask_at, 5: answer_at,
+						6: answerer_name, 7: answerer_id, 8: followers_count, 9: description,
+						10: asker_name, 11: asker_id,
+					})
 				},
 			},
 
