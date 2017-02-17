@@ -139,6 +139,9 @@ func init() {
 //var ask_cookies1 = "_s_tentry=-; Apache=6107357982546.091.1486706299965; SINAGLOBAL=6107357982546.091.1486706299965; ULV=1486706299975:1:1:1:6107357982546.091.1486706299965:; SUB=_2A251mSV3DeRhGeNI4lsU9CrEyDiIHXVWtVU_rDV8PUJbitAKLWatkWtZewsAa7ojD2tv3UZtpQVbYffaDw..; SUBP=0033WrSXqPxfM725Ws9jqgMF55529P9D9WWpuEKiUVVcFsGgwUyqlHLY5NHD95QfSo.4SKBX1heXWs4DqcjMi--NiK.Xi-2Ri--ciKnRi-zNSKq41K-XShn0S5tt; SCF=AnIMOiTPi591m41NyWBnF6ieIv41bLg3CyEJ8ZDuGzWFIoHkUeD32kZDpZvjSR_YuQ..; SUHB=0KABWDSJpS2qKc"
 var ask_cookies2 = "SUB=_2A251mR_mDeRhGeBP6FcQ9inFwzuIHXVWtUuurDV8PUJbitAKLWrAkWtgXLKVDjW1uPm5b-j_sk-g9JE3aQ..; SUBP=0033WrSXqPxfM725Ws9jqgMF55529P9D9Wh.NW5WSuYsKu1Xkoev7WS45NHD95QceKefeKqN1KnNWs4DqcjMi--NiK.Xi-2Ri--ciKnRi-zNSo20SK2cS0.RS7tt; SCF=AnIMOiTPi591m41NyWBnF6hVAZTRxU4VG6Xc2AhuNBIH_CPB6ScH4PgQ1PxsGffSGQ..; SUHB=0mxU7Nhg2YNZng; _s_tentry=-; Apache=1935663854237.6458.1486712796058; SINAGLOBAL=1935663854237.6458.1486712796058; ULV=1486712796112:1:1:1:1935663854237.6458.1486712796058:"
 
+//var WeiboAskRunMode = "test"
+var WeiboAskRunMode = "run"
+
 var WeiboAskSpider = &Spider{
 	Name:         "微博问答问题",
 	Description:  "微博问答问题爬虫",
@@ -175,10 +178,15 @@ var WeiboAskSpider = &Spider{
 							)
 
 							//todo 测试
-							break
+							if WeiboAskRunMode == "test" {
+								break
+							}
 						} else {
 							//todo 测试
-							break
+							if WeiboAskRunMode == "test" {
+								break
+							}
+
 							var tempData = map[string]interface{}{"fieldType": k}
 							ctx.AddQueue(
 								&request.Request{
@@ -217,7 +225,10 @@ var WeiboAskSpider = &Spider{
 
 					if fieldType > 0 {
 						//todo 测试用 pageCount强制等于1
-						pageCount = 1
+						if WeiboAskRunMode == "test" {
+							pageCount = 1
+						}
+
 						for i := 1; i <= pageCount; i++ {
 							//注：这里用两个%d，不包含fieldType为负数的情况
 							url := fmt.Sprintf("http://e.weibo.com/v1/public/h5/aj/qa/getfamousanswer?fieldtype=%d&page=%d&pagesize=10", fieldType, i)
@@ -234,7 +245,10 @@ var WeiboAskSpider = &Spider{
 					} else {
 						for i := 1; i <= pageCount; i++ {
 							//todo 测试用 pageCount强制等于1
-							pageCount = 1
+							if WeiboAskRunMode == "test" {
+								pageCount = 1
+							}
+
 							url := fmt.Sprintf("http://e.weibo.com/v1/public/h5/aj/qa/getfamousanswer?fieldtype=%s&page=%d&pagesize=10", FieldTypes[fieldType], i)
 							ctx.AddQueue(
 								&request.Request{
@@ -259,7 +273,9 @@ var WeiboAskSpider = &Spider{
 					for _, v := range askData.Data.List {
 						ctx.Aid(map[string]interface{}{"data": &v}, "查询答主问题价格")
 						//todo 测试
-						break
+						if WeiboAskRunMode == "test" {
+							break
+						}
 					}
 					//ctx.Aid(map[string]interface{}{"totalPage": totalPage, "fieldType": fieldType}, "按类按页查询答主")
 				},
@@ -335,7 +351,9 @@ var WeiboAskSpider = &Spider{
 								},
 							)
 							//todo 测试
-							break
+							if WeiboAskRunMode == "test" {
+								break
+							}
 						}
 					}
 
@@ -362,7 +380,9 @@ var WeiboAskSpider = &Spider{
 
 						ctx.Aid(aid, "查询问题详细")
 						//todo 测试
-						break
+						if WeiboAskRunMode == "test" {
+							break
+						}
 					}
 				},
 			},
