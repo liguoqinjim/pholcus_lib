@@ -141,14 +141,14 @@ func init() {
 //var ask_cookies1 = "_s_tentry=-; Apache=6107357982546.091.1486706299965; SINAGLOBAL=6107357982546.091.1486706299965; ULV=1486706299975:1:1:1:6107357982546.091.1486706299965:; SUB=_2A251mSV3DeRhGeNI4lsU9CrEyDiIHXVWtVU_rDV8PUJbitAKLWatkWtZewsAa7ojD2tv3UZtpQVbYffaDw..; SUBP=0033WrSXqPxfM725Ws9jqgMF55529P9D9WWpuEKiUVVcFsGgwUyqlHLY5NHD95QfSo.4SKBX1heXWs4DqcjMi--NiK.Xi-2Ri--ciKnRi-zNSKq41K-XShn0S5tt; SCF=AnIMOiTPi591m41NyWBnF6ieIv41bLg3CyEJ8ZDuGzWFIoHkUeD32kZDpZvjSR_YuQ..; SUHB=0KABWDSJpS2qKc"
 var ask_cookies2 = "SUB=_2A251mR_mDeRhGeBP6FcQ9inFwzuIHXVWtUuurDV8PUJbitAKLWrAkWtgXLKVDjW1uPm5b-j_sk-g9JE3aQ..; SUBP=0033WrSXqPxfM725Ws9jqgMF55529P9D9Wh.NW5WSuYsKu1Xkoev7WS45NHD95QceKefeKqN1KnNWs4DqcjMi--NiK.Xi-2Ri--ciKnRi-zNSo20SK2cS0.RS7tt; SCF=AnIMOiTPi591m41NyWBnF6hVAZTRxU4VG6Xc2AhuNBIH_CPB6ScH4PgQ1PxsGffSGQ..; SUHB=0mxU7Nhg2YNZng; _s_tentry=-; Apache=1935663854237.6458.1486712796058; SINAGLOBAL=1935663854237.6458.1486712796058; ULV=1486712796112:1:1:1:1935663854237.6458.1486712796058:"
 
-var WeiboAskRunMode = "test"
+//var WeiboAskRunMode = "test"
 
-//var WeiboAskRunMode = "run"
+var WeiboAskRunMode = "run"
 
 var WeiboAskSpider = &Spider{
 	Name:         "微博问答问题",
 	Description:  "微博问答问题爬虫",
-	Pausetime:    2000,
+	Pausetime:    4000,
 	Keyin:        KEYIN,
 	Limit:        LIMIT,
 	EnableCookie: false,
@@ -402,14 +402,16 @@ var WeiboAskSpider = &Spider{
 
 					question_id := strings.Split(question_url, "=")[1]
 					//注意：%号转义
-					url_temp := "http://api.weibo.cn/2/question/show?networktype=wifi&uicode=10000432&moduleID=700&wb_version=3319&c=android&i=61e6992&s=773ce9dd&ua=LENOVO-Lenovo%%20A3300-T__weibo__7.0.0__android__android4.4.2&wm=2468_1001&aid=01ApIEZ_RFW8QFgeOItuEYX1q0tJxDA9C2a8HBmnmEK9iF5K8.&oid=%s&v_f=2&from=1070095010&gsid=_2A251ofP_DeRxGeBP6FcQ9inFwzuIHXVUDxQurDV6PUJbkdAKLWLNkWqC3NU0yJ_c7bOoukrk9g-NKkmkKg..&lang=zh_CN&skin=default&vuid=6135167987&oldwm=2468_1001&sflag=1&luicode=80000001"
+					//
+					//1. http://api.weibo.cn/2/question/show?networktype=wifi&uicode=10000432&moduleID=700&wb_version=3319&c=android&i=61e6992&s=773ce9dd&ua=LENOVO-Lenovo%%20A3300-T__weibo__7.0.0__android__android4.4.2&wm=2468_1001&aid=01ApIEZ_RFW8QFgeOItuEYX1q0tJxDA9C2a8HBmnmEK9iF5K8.&oid=%s&v_f=2&from=1070095010&gsid=_2A251ofP_DeRxGeBP6FcQ9inFwzuIHXVUDxQurDV6PUJbkdAKLWLNkWqC3NU0yJ_c7bOoukrk9g-NKkmkKg..&lang=zh_CN&skin=default&vuid=6135167987&oldwm=2468_1001&sflag=1&luicode=80000001
+					url_temp := "http://api.weibo.cn/2/question/show?networktype=wifi&uicode=10000432&moduleID=700&wb_version=3322&c=android&i=61e6992&s=0c717b31&ua=YuLong-Coolpad%%207620L__weibo__7.1.0__android__android4.4.2&wm=2468_1001&aid=01ApIEZ_RFW8QFgeOItuEYX1oB2yKTlTFiv-RLxwEuV418ST0.&oid=%s&v_f=2&from=1071095010&gsid=_2A251oqf8DeRxGeBP6VQU-SrOyT2IHXVU-bw0rDV6PUJbkdANLW7EkWqefd6bLSGw6FDiDEaXL-UKxri7hw..&lang=zh_CN&skin=default&vuid=6126594221&oldwm=2468_1001&sflag=1&luicode=80000001"
 					url := fmt.Sprintf(url_temp, question_id)
 					ctx.AddQueue(
 						&request.Request{
 							Url: url,
 							Header: http.Header{
-								"X-Log-Uid":  []string{"6135167987"},
-								"User-Agent": []string{"Lenovo A3300-T_4.4.2_weibo_7.0.0_android"},
+								"X-Log-Uid":  []string{"6126594221"},
+								"User-Agent": []string{"Coolpad 7620L_4.4.2_weibo_7.1.0_android"},
 							},
 							Temp: aid,
 							Rule: "查询问题详细",
@@ -459,14 +461,17 @@ var WeiboAskSpider = &Spider{
 					question_id := strings.Split(question_url, "=")[1]
 					fid := strings.Split(question_id, ":")[1]
 					//注意：%号转义
-					url_temp := "http://api.weibo.cn/2/question/extend?networktype=wifi&uicode=10000432&moduleID=700&wb_version=3319&c=android&i=61e6992&s=773ce9dd&ua=LENOVO-Lenovo%%20A3300-T__weibo__7.0.0__android__android4.4.2&wm=2468_1001&aid=01ApIEZ_RFW8QFgeOItuEYX1q0tJxDA9C2a8HBmnmEK9iF5K8.&fid=%s&oid=%s&v_f=2&from=1070095010&gsid=_2A251ofP_DeRxGeBP6FcQ9inFwzuIHXVUDxQurDV6PUJbkdAKLWLNkWqC3NU0yJ_c7bOoukrk9g-NKkmkKg..&lang=zh_CN&read=false&skin=default&vuid=6135167987&oldwm=2468_1001&sflag=1&luicode=80000001"
+
+					//
+					//1 http://api.weibo.cn/2/question/extend?networktype=wifi&uicode=10000432&moduleID=700&wb_version=3319&c=android&i=61e6992&s=773ce9dd&ua=LENOVO-Lenovo%%20A3300-T__weibo__7.0.0__android__android4.4.2&wm=2468_1001&aid=01ApIEZ_RFW8QFgeOItuEYX1q0tJxDA9C2a8HBmnmEK9iF5K8.&fid=%s&oid=%s&v_f=2&from=1070095010&gsid=_2A251ofP_DeRxGeBP6FcQ9inFwzuIHXVUDxQurDV6PUJbkdAKLWLNkWqC3NU0yJ_c7bOoukrk9g-NKkmkKg..&lang=zh_CN&read=false&skin=default&vuid=6135167987&oldwm=2468_1001&sflag=1&luicode=80000001
+					url_temp := "http://api.weibo.cn/2/question/extend?networktype=wifi&uicode=10000432&moduleID=700&wb_version=3322&c=android&i=61e6992&s=0c717b31&ua=YuLong-Coolpad%%207620L__weibo__7.1.0__android__android4.4.2&wm=2468_1001&aid=01ApIEZ_RFW8QFgeOItuEYX1oB2yKTlTFiv-RLxwEuV418ST0.&fid=%s&oid=%s&v_f=2&from=1071095010&gsid=_2A251oqf8DeRxGeBP6VQU-SrOyT2IHXVU-bw0rDV6PUJbkdANLW7EkWqefd6bLSGw6FDiDEaXL-UKxri7hw..&lang=zh_CN&read=false&skin=default&vuid=6126594221&oldwm=2468_1001&sflag=1&luicode=80000001"
 					url := fmt.Sprintf(url_temp, fid, question_id)
 					ctx.AddQueue(
 						&request.Request{
 							Url: url,
 							Header: http.Header{
-								"X-Log-Uid":  []string{"6135167987"},
-								"User-Agent": []string{"Lenovo A3300-T_4.4.2_weibo_7.0.0_android"},
+								"X-Log-Uid":  []string{"6126594221"},
+								"User-Agent": []string{"Coolpad 7620L_4.4.2_weibo_7.1.0_android"},
 							},
 							Temp: aid,
 							Rule: "查询问题围观数",
