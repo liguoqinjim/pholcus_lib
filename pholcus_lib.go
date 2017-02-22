@@ -32,5 +32,6 @@ import (
 	_ "github.com/liguoqinjim/pholcus_lib/weibo_ask"
 	_ "github.com/liguoqinjim/pholcus_lib/weibo_ask2"
 	//_ "github.com/liguoqinjim/pholcus_lib/weibo_fans"
+	_ "github.com/liguoqinjim/pholcus_lib/test_mysql"
 	_ "github.com/liguoqinjim/pholcus_lib/test_pause"
 )

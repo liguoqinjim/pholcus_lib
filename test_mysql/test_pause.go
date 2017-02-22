@@ -28,12 +28,12 @@ import (
 )
 
 func init() {
-	TestPause.Register()
+	TestMysql.Register()
 }
 
-var TestPause = &Spider{
-	Name:        "测试pauseTime",
-	Description: "测试pauseTime",
+var TestMysql = &Spider{
+	Name:        "测试mysql",
+	Description: "测试mysql",
 	//Pausetime:   50000,
 	// Keyin:        KEYIN,
 	// Limit:        LIMIT,
