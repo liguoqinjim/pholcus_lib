@@ -34,7 +34,7 @@ func init() {
 var TestPause = &Spider{
 	Name:        "测试pauseTime",
 	Description: "测试pauseTime",
-	Pausetime:   1000,
+	Pausetime:   50000,
 	// Keyin:        KEYIN,
 	// Limit:        LIMIT,
 	EnableCookie: false,
