@@ -28,10 +28,10 @@ import (
 )
 
 func init() {
-	Wangyi.Register()
+	TestPause.Register()
 }
 
-var Wangyi = &Spider{
+var TestPause = &Spider{
 	Name:        "测试pauseTime",
 	Description: "测试pauseTime",
 	Pausetime:   1000,
